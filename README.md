@@ -1,7 +1,7 @@
 imgurl
 ======
 
-Package imgurl offers methods to fetch, thumbnail and convert remote image to a bas64 encoded data URL.
+Package imgurl offers methods to fetch, thumbnail and convert remote images to a base64 encoded data URL.
 
 #Usage
 
