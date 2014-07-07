@@ -29,8 +29,8 @@ func Urlify(url string, maxwidth,maxheight int) (ret string, err error) {
 	return transcode(resp.Body,mt[0],maxwidth,maxheight)
 }
 
-// transcode reads the given image, scales it to the given size keeping the aspect rati
-// and transcods it to a bas64 encoded data url.
+// transcode reads the given image, scales it to the given size keeping the aspect ratio
+// and transcodes it to a base64 encoded data url.
 func transcode(source io.Reader,mt string,maxwidth,maxheight int) (ret string, err error) {
 	var img image.Image
 	switch mt {

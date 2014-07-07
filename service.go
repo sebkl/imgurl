@@ -12,12 +12,12 @@ type Response struct {
 }
 
 
-type TranscoderService struct {
+type TranscodeService struct {
 	in chan* Request
 	out chan* Response
 }
 
-func NewTranscodeService(worker int) (ret TranscoderService) {
+func NewTranscodeService(worker int) (ret *TranscodeService) {
 	in := make(chan *Request,10)
 	out := make(chan *Response,10)
 
@@ -32,5 +32,5 @@ func NewTranscodeService(worker int) (ret TranscoderService) {
 		}(in)
 	}
 
-	return TranscoderService{in: in, out: out}
+	return &TranscodeService{in: in, out: out}
 }
