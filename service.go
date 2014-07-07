@@ -1,20 +1,20 @@
 package imgurl
 
 type Request struct {
-	url string
-	maxwidth,maxheight int
-	payload interface{}
+	Url string
+	Maxwidth,Maxheight int
+	Payload interface{}
 }
 
 type Response struct {
-	image string
-	payload interface{}
+	Image string
+	Payload interface{}
 }
 
 
 type TranscodeService struct {
-	in chan* Request
-	out chan* Response
+	In chan* Request
+	Out chan* Response
 }
 
 func NewTranscodeService(worker int) (ret *TranscodeService) {
@@ -25,12 +25,12 @@ func NewTranscodeService(worker int) (ret *TranscodeService) {
 		go func (in chan *Request) {
 			for ;; {
 				req := <-in
-				img,_ :=Urlify(req.url,req.maxwidth,req.maxheight);
-				resp := &Response{image: img, payload: req.payload}
+				img,_ :=Urlify(req.Url,req.Maxwidth,req.Maxheight);
+				resp := &Response{Image: img, Payload: req.Payload}
 				out <- resp
 			}
 		}(in)
 	}
 
-	return &TranscodeService{in: in, out: out}
+	return &TranscodeService{In: in, Out: out}
 }
