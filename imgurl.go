@@ -12,11 +12,18 @@ import (
 	"encoding/base64"
 	"bytes"
 	"io"
+	"log"
 )
 
 // Urilfy fetches the image referenced by the given url, scales it to the given sizes keeping the aspect ratio
 // and transcods it to a base64 encoded data url.
 func Urlify(url string, maxwidth,maxheight int) (ret string, err error) {
+	defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprintf("Panic in Urlify: %s",r))
+				log.Println(err)
+			}
+		}()
 	resp, err := http.Get(url)
 	if err != nil {
 		return
