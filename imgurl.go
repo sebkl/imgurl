@@ -1,7 +1,7 @@
 package imgurl
 
 import (
-	. "github.com/nfnt/resize"
+	"github.com/nfnt/resize"
 	"net/http"
 	"image/jpeg"
 	"image/png"
@@ -15,9 +15,11 @@ import (
 	"log"
 )
 
+type Filter func(image.Image) (image.Image,interface{})
+
 // Urilfy fetches the image referenced by the given url, scales it to the given sizes keeping the aspect ratio
 // and transcods it to a base64 encoded data url.
-func Urlify(url string, maxwidth,maxheight int) (ret string, err error) {
+func Urlify(url string, maxwidth,maxheight int,filters ...Filter) (ret string, tags []interface{}, err error) {
 	defer func() {
 			if r := recover(); r != nil {
 				err = errors.New(fmt.Sprintf("Panic in Urlify: %s",r))
@@ -33,12 +35,22 @@ func Urlify(url string, maxwidth,maxheight int) (ret string, err error) {
 
 	mt := resp.Header["Content-Type"]
 
-	return transcode(resp.Body,mt[0],maxwidth,maxheight)
+	img,err := decode(resp.Body,mt[0],maxwidth,maxheight)
+	if err != nil {
+		return
+	}
+
+	tags = make([]interface{},len(filters))
+	for i,f := range filters {
+		img,tags[i] = f(img)
+	}
+
+	ret,err = encode(img)
+	return
 }
 
-// transcode reads the given image, scales it to the given size keeping the aspect ratio
-// and transcodes it to a base64 encoded data url.
-func transcode(source io.Reader,mt string,maxwidth,maxheight int) (ret string, err error) {
+// decode reads the given image and scales it to the given size keeping the aspect ratio
+func decode(source io.Reader,mt string,maxwidth,maxheight int) (i image.Image, err error) {
 	var img image.Image
 	switch mt {
 		case "image/jpeg","image/jpg":
@@ -48,14 +60,16 @@ func transcode(source io.Reader,mt string,maxwidth,maxheight int) (ret string, e
 		case "image/gif":
 			img, err = gif.Decode(source)
 		default:
-			return "",errors.New(fmt.Sprintf("Unsupported content type: %s",mt))
+			return nil,errors.New(fmt.Sprintf("Unsupported content type: %s",mt))
 	}
+	scaled := resize.Thumbnail(uint(maxwidth),uint(maxheight),img,resize.Bilinear)
+	return scaled, nil
+}
 
-	scaled := Thumbnail(uint(maxwidth),uint(maxheight),img,Bilinear)
-
+// encode ecnodes the image into a base64 png data url.
+func encode(source image.Image) (ret string, err error) {
 	buf:= new(bytes.Buffer)
-
-	err = png.Encode(buf,scaled)
+	err = png.Encode(buf,source)
 	if err != nil {
 		return
 	}

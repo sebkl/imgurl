@@ -21,7 +21,7 @@ func check(in string) (ret bool) {
 }
 
 func TestBasic(t *testing.T) {
-	resp, err := Urlify(TESTIMAGE,TESTSIZE,TESTSIZE)
+	resp, _, err := Urlify(TESTIMAGE,TESTSIZE,TESTSIZE)
 	if err != nil {
 		t.Errorf("Image processing failed: %s",err)
 	}
@@ -33,17 +33,40 @@ func TestBasic(t *testing.T) {
 }
 
 func TestTranscodeService(t *testing.T) {
-	ts := NewTranscodeService(3)
+	ts := NewTranscodeService(3,5)
 
 	for i := 0;i < 5; i++ {
-		ts.in <- &Request{url: TESTIMAGE,maxwidth: TESTSIZE,maxheight: TESTSIZE}
+		ts.in <- &Request{Url: TESTIMAGE,Maxwidth: TESTSIZE,Maxheight: TESTSIZE}
 	}
 
 	for i := 0;i < 5; i++ {
 		resp := <-ts.out
-		if !check(resp.image) {
-			t.Errorf("Image processing failed: %s",resp.image)
+		if !check(resp.Image) {
+			t.Errorf("Image processing failed: %s",resp.Image)
 		}
+	}
+}
+
+func TestTrasncodeServiceOverload(t *testing.T) {
+	ts := NewTranscodeService(2,2)
+	ts.Push( &Request{Url: TESTIMAGE,Maxwidth: TESTSIZE,Maxheight: TESTSIZE} )
+	ts.Push( &Request{Url: TESTIMAGE,Maxwidth: TESTSIZE,Maxheight: TESTSIZE} )
+	if !ts.Full() {
+		t.Errorf("Request queue overloaded.")
+	}
+}
+
+func TestTranscodeServiceFilter(t *testing.T) {
+	ts := NewTranscodeService(2,2)
+	filters := []Filter{NudeFilter}
+	ts.Push( &Request{Url: TESTIMAGE,Maxwidth: TESTSIZE,Maxheight: TESTSIZE, Filters: filters} )
+	resp := ts.Get()
+	if len(resp.Tags) <= 0 {
+		t.Errorf("Filter did not return tag.")
+	}
+
+	if r,ok := resp.Tags[0].(bool); !ok || r  {
+		t.Errorf("Filter did not detect correct.")
 	}
 }
 
@@ -59,6 +82,7 @@ func BenchmarkTranscode(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf := bytes.NewBuffer(body)
-		transcode(buf,mt[0],TESTSIZE,TESTSIZE)
+		img,_:= decode(buf,mt[0],TESTSIZE,TESTSIZE)
+		encode(img)
 	}
 }
