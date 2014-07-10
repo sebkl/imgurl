@@ -82,7 +82,7 @@ func BenchmarkTranscode(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		buf := bytes.NewBuffer(body)
-		img,_:= decode(buf,mt[0],TESTSIZE,TESTSIZE)
+		img,_:= Decode(buf,mt[0],TESTSIZE,TESTSIZE)
 		encode(img)
 	}
 }

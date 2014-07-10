@@ -35,7 +35,7 @@ func Urlify(url string, maxwidth,maxheight int,filters ...Filter) (ret string, t
 
 	mt := resp.Header["Content-Type"]
 
-	img,err := decode(resp.Body,mt[0],maxwidth,maxheight)
+	img,err := Decode(resp.Body,mt[0],maxwidth,maxheight)
 	if err != nil {
 		return
 	}
@@ -49,8 +49,8 @@ func Urlify(url string, maxwidth,maxheight int,filters ...Filter) (ret string, t
 	return
 }
 
-// decode reads the given image and scales it to the given size keeping the aspect ratio
-func decode(source io.Reader,mt string,maxwidth,maxheight int) (i image.Image, err error) {
+// Decode reads the given image and scales it to the given size keeping the aspect ratio
+func Decode(source io.Reader,mt string,maxwidth,maxheight int) (i image.Image, err error) {
 	var img image.Image
 	switch mt {
 		case "image/jpeg","image/jpg":
