@@ -17,16 +17,17 @@ import (
 
 type Filter func(image.Image) (image.Image,interface{})
 
-// Urilfy fetches the image referenced by the given url, scales it to the given sizes keeping the aspect ratio
+// UrilfyC fetches the image referenced by the given url, scales it to the given sizes keeping the aspect ratio
 // and transcods it to a base64 encoded data url.
-func Urlify(url string, maxwidth,maxheight int,filters ...Filter) (ret string, tags []interface{}, err error) {
+// Hereby the given http Client is used.
+func UrlifyC(c *http.Client, url string, maxwidth,maxheight int,filters ...Filter) (ret string, tags []interface{}, err error) {
 	defer func() {
 			if r := recover(); r != nil {
 				err = errors.New(fmt.Sprintf("Panic in Urlify: %s",r))
 				log.Println(err)
 			}
 		}()
-	resp, err := http.Get(url)
+	resp, err := c.Get(url)
 	if err != nil {
 		return
 	}
@@ -47,6 +48,12 @@ func Urlify(url string, maxwidth,maxheight int,filters ...Filter) (ret string, t
 
 	ret,err = encode(img)
 	return
+}
+
+// Urilfy fetches the image referenced by the given url, scales it to the given sizes keeping the aspect ratio
+// and transcods it to a base64 encoded data url.
+func Urlify(url string, maxwidth,maxheight int,filters ...Filter) (ret string, tags []interface{}, err error) {
+	return UrlifyC(http.DefaultClient,url,maxwidth,maxheight,filters...)
 }
 
 // Decode reads the given image and scales it to the given size keeping the aspect ratio
