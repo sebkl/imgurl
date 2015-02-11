@@ -21,12 +21,6 @@ type Filter func(image.Image) (image.Image,interface{})
 // and transcods it to a base64 encoded data url.
 // Hereby the given http Client is used.
 func UrlifyC(c *http.Client, url string, maxwidth,maxheight int,filters ...Filter) (ret string, tags []interface{}, err error) {
-	defer func() {
-			if r := recover(); r != nil {
-				err = errors.New(fmt.Sprintf("Panic in Urlify: %s",r))
-				log.Println(err)
-			}
-		}()
 	resp, err := c.Get(url)
 	if err != nil {
 		return
@@ -36,7 +30,20 @@ func UrlifyC(c *http.Client, url string, maxwidth,maxheight int,filters ...Filte
 
 	mt := resp.Header["Content-Type"]
 
-	img,err := Decode(resp.Body,mt[0],maxwidth,maxheight)
+	return UrlifyR(resp.Body,mt[0],maxwidth,maxheight,filters...)
+}
+
+
+// UrlifyR reads the image fromt he given reader, scales it to the given sizes keeping the apsect ratio
+// and transcods it to a base74 encoded data url.
+func UrlifyR(source io.Reader,mt string, maxwidth, maxheight int,filters ...Filter) (ret string, tags []interface{}, err error) {
+	defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprintf("Panic in Urlify: %s",r))
+				log.Println(err)
+			}
+		}()
+	img,err := Decode(source,mt,maxwidth,maxheight)
 	if err != nil {
 		return
 	}
