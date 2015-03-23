@@ -64,7 +64,7 @@ func Urlify(url string, maxwidth,maxheight int,filters ...Filter) (ret string, t
 }
 
 // Decode reads the given image and scales it to the given size keeping the aspect ratio
-func Decode(source io.Reader,mt string,maxwidth,maxheight int) (i image.Image, err error) {
+func Decode(source io.Reader,mt string,mwh ...int) (i image.Image, err error) {
 	var img image.Image
 	switch mt {
 		case "image/jpeg","image/jpg":
@@ -76,8 +76,21 @@ func Decode(source io.Reader,mt string,maxwidth,maxheight int) (i image.Image, e
 		default:
 			return nil,errors.New(fmt.Sprintf("Unsupported content type: %s",mt))
 	}
-	scaled := resize.Thumbnail(uint(maxwidth),uint(maxheight),img,resize.Bilinear)
-	return scaled, nil
+	if len(mwh) > 0{
+		var mw,mh int
+		mw = mwh[0]
+		if len(mwh) > 1 {
+			mh = mwh[1]
+		}
+
+		if (mw > 0 && mh > 0) {
+			return resize.Thumbnail(uint(mw),uint(mh),img,resize.Bilinear), err
+		} else {
+			return img,err
+		}
+	} else {
+		return img, err
+	}
 }
 
 // encode ecnodes the image into a base64 png data url.
